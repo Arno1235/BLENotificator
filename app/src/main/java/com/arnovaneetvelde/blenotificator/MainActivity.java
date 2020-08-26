@@ -119,12 +119,14 @@ public class MainActivity extends AppCompatActivity {
 
         createNotificationChannel();
 
+    }
+
+    public void start(View v){
         mYourService = new BackgroundService();
         mServiceIntent = new Intent(this, mYourService.getClass());
         if (!isMyServiceRunning(mYourService.getClass())) {
             startService(mServiceIntent);
         }
-
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
