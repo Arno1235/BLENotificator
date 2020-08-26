@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private final int maxSavedItems = 5;
     private NotificationManager notificationManager;
 
-    Intent mServiceIntent;
+    private Intent mServiceIntent;
     private BackgroundService mYourService;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -275,12 +275,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDetection(){
-        butON.setVisibility(View.INVISIBLE);
-        butOFF.setVisibility(View.VISIBLE);
-        mYourService = new BackgroundService();
-        mServiceIntent = new Intent(this, mYourService.getClass());
-        if (!isMyServiceRunning(mYourService.getClass())) {
-            startService(mServiceIntent);
+        if (permissions && savedDevices.size() > 0) {
+            butON.setVisibility(View.INVISIBLE);
+            butOFF.setVisibility(View.VISIBLE);
+            mYourService = new BackgroundService();
+            mServiceIntent = new Intent(this, mYourService.getClass());
+            if (!isMyServiceRunning(mYourService.getClass())) {
+                startService(mServiceIntent);
+            }
         }
     }
 

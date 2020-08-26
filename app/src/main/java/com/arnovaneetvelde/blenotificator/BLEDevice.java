@@ -8,7 +8,7 @@ public class BLEDevice {
 
     private String name, address;
     private Integer rssi, saveIndex;
-    private Boolean saved;
+    private Boolean saved, inRange;
     private final int maxSavedItems = 5;
     private Context context;
 
@@ -18,6 +18,7 @@ public class BLEDevice {
         this.rssi = rssi;
         this.context = context;
         this.saved = checkIfSaved();
+        this.inRange = true;
     }
 
     public String getName(){
@@ -31,6 +32,9 @@ public class BLEDevice {
     }
     public Boolean isSaved(){
         return saved;
+    }
+    public Boolean isInRange(){
+        return inRange;
     }
     public void save(){
         saveDevice();
@@ -46,6 +50,9 @@ public class BLEDevice {
     }
     public void setRssi(Integer newRssi){
         this.rssi = newRssi;
+    }
+    public void setRange(Boolean range){
+        inRange = range;
     }
 
     public boolean isEqual(String compareAddress){
