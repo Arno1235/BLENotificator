@@ -2,7 +2,9 @@ package com.arnovaneetvelde.blenotificator;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -16,6 +18,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -40,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
+
+    Intent mServiceIntent;
+    private BackgroundService mYourService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +117,34 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "all very bad", Toast.LENGTH_SHORT).show();
         }
 
+        createNotificationChannel();
+
+        mYourService = new BackgroundService();
+        mServiceIntent = new Intent(this, mYourService.getClass());
+        if (!isMyServiceRunning(mYourService.getClass())) {
+            startService(mServiceIntent);
+        }
+
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        //stopService(mServiceIntent);
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction("restartservice");
+        broadcastIntent.setClass(this, Restarter.class);
+        this.sendBroadcast(broadcastIntent);
+        super.onDestroy();
     }
 
     // Device scan callback.
@@ -208,7 +242,40 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void testNotification(View v){
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Notifications";
+            String description = "Get a notification when device is out of range.";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("BLENotificator" , name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void testBackground(View v){
+        Runnable newThread = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    testNotification();
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        newThread.run();
+    }
+
+    public void testNotification(){
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -223,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
                 .setContentText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
                 .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
                 .setContentIntent(contentIntent)
+                .setChannelId("BLENotificator")
                 .setContentInfo("Info");
 
 
