@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private NotificationManager notificationManager;
 
     Intent mServiceIntent;
-    private BackgroundService mYourService;
+    private BackgroundService2 mYourService;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -88,13 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 stopDetection();
             }
         });
-        mYourService = new BackgroundService();
-        mServiceIntent = new Intent(this, mYourService.getClass());
-        if (!isMyServiceRunning(mYourService.getClass())) {
-            butOFF.setVisibility(View.INVISIBLE);
-        } else {
-            butON.setVisibility(View.INVISIBLE);
-        }
+        butOFF.setVisibility(View.INVISIBLE);
 
         savedDevices = new ArrayList<>();
 
@@ -281,6 +276,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDetection(){
+        mYourService = new BackgroundService2();
+        mServiceIntent = new Intent(this, mYourService.getClass());
+        if (!isMyServiceRunning(mYourService.getClass())) {
+            startService(mServiceIntent);
+        }
+    }
+    public void stopDetection(){
+
+    }
+
+    /**
+    public void startDetection(){
         if (permissions && savedDevices.size() > 0) {
             butON.setVisibility(View.INVISIBLE);
             butOFF.setVisibility(View.VISIBLE);
@@ -297,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
         butOFF.setVisibility(View.INVISIBLE);
         stopService(mServiceIntent);
     }
+     */
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);

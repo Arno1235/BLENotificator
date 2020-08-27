@@ -12,9 +12,9 @@ public class Restarter extends BroadcastReceiver {
         //Toast.makeText(context, "Service restarted", Toast.LENGTH_SHORT).show();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(new Intent(context, BackgroundService.class));
+            context.startForegroundService(new Intent(context, BackgroundService2.class));
         } else {
-            context.startService(new Intent(context, BackgroundService.class));
+            context.startService(new Intent(context, BackgroundService2.class));
         }
     }
 }
