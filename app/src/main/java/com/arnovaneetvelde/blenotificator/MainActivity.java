@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private NotificationManager notificationManager;
 
     Intent mServiceIntent;
-    private BackgroundService2 mYourService;
+    private BackgroundService mYourService;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -91,6 +91,12 @@ public class MainActivity extends AppCompatActivity {
         });
         butOFF.setVisibility(View.INVISIBLE);
 
+        mYourService = new BackgroundService();
+        mServiceIntent = new Intent(this, mYourService.getClass());
+        if (isMyServiceRunning(mYourService.getClass())) {
+            stopDetection();
+        }
+
         savedDevices = new ArrayList<>();
 
         listSavedDevices = (ListView) findViewById(R.id.listSavedDevices);
@@ -98,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         notificationManager = getSystemService(NotificationManager.class);
         if (notificationManager.getNotificationChannel("BLENotificator") == null){
             createNotificationChannel();
+        }
+        if (notificationManager.getNotificationChannel("BLENotificatorBackgroundService") == null){
+            createBGNotificationChannel();
         }
 
         updateListView();
@@ -276,23 +285,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDetection(){
-        mYourService = new BackgroundService2();
-        mServiceIntent = new Intent(this, mYourService.getClass());
-        if (!isMyServiceRunning(mYourService.getClass())) {
-            startService(mServiceIntent);
-        }
-    }
-    public void stopDetection(){
-
-    }
-
-    /**
-    public void startDetection(){
         if (permissions && savedDevices.size() > 0) {
             butON.setVisibility(View.INVISIBLE);
             butOFF.setVisibility(View.VISIBLE);
             //mYourService = new BackgroundService();
             //mServiceIntent = new Intent(this, mYourService.getClass());
+            SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = BGSettings.edit();
+            editor.putBoolean("Run", true);
+            editor.apply();
             if (!isMyServiceRunning(mYourService.getClass())) {
                 startService(mServiceIntent);
             }
@@ -302,9 +303,12 @@ public class MainActivity extends AppCompatActivity {
     public void stopDetection(){
         butON.setVisibility(View.VISIBLE);
         butOFF.setVisibility(View.INVISIBLE);
-        stopService(mServiceIntent);
+        //stopService(mServiceIntent);
+        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = BGSettings.edit();
+        editor.putBoolean("Run", false);
+        editor.apply();
     }
-     */
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -322,6 +326,17 @@ public class MainActivity extends AppCompatActivity {
             String description = "Get a notification when device is out of range.";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel("BLENotificator" , name, importance);
+            channel.setDescription(description);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void createBGNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Background Service";
+            String description = "Background Service";
+            int importance = NotificationManager.IMPORTANCE_NONE;
+            NotificationChannel channel = new NotificationChannel("BLENotificatorBackgroundService" , name, importance);
             channel.setDescription(description);
             notificationManager.createNotificationChannel(channel);
         }

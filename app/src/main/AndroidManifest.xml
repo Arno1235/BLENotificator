@@ -41,7 +41,7 @@
         </activity>
 
         <service
-            android:name=".BackgroundService2"
+            android:name=".BackgroundService"
             android:enabled="true"></service>
     </application>
 
