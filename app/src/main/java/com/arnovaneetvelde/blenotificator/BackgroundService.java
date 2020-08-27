@@ -49,8 +49,8 @@ public class BackgroundService extends Service {
                     .setWhen(System.currentTimeMillis())
                     .setSmallIcon(R.drawable.ic_launcher_foreground)
                     .setTicker("Hearty365")
-                    .setContentTitle("Default notification")
-                    .setContentText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
+                    .setContentTitle("")
+                    .setContentText("")
                     .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
                     .setChannelId("BLENotificator")
                     .setContentInfo("Info");
@@ -62,11 +62,14 @@ public class BackgroundService extends Service {
         btAdapter = btManager.getAdapter();
         btScanner = btAdapter.getBluetoothLeScanner();
 
+        //createNotification("start");
+
         devices = new ArrayList<>();
         getSavedDevices();
     }
 
     public void intervalRun(){
+        createNotification("test");
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -132,7 +135,8 @@ public class BackgroundService extends Service {
     }
 
     public void createNotification(String text){
-        b.setContentText(text + " out of range!");
+        b.setContentTitle(text + " out of range")
+                .setContentText("Don't forget " + text);
         notificationManager.notify(1, b.build());
     }
 
@@ -161,7 +165,7 @@ public class BackgroundService extends Service {
                 intervalRun();
             }
         };
-        timer.schedule(timerTask, 60000, 60000); //
+        timer.schedule(timerTask, 10000, 10000); //
     }
 
     public void stoptimertask() {

@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private final int maxSavedItems = 5;
     private NotificationManager notificationManager;
 
-    private Intent mServiceIntent;
+    Intent mServiceIntent;
     private BackgroundService mYourService;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -88,7 +88,13 @@ public class MainActivity extends AppCompatActivity {
                 stopDetection();
             }
         });
-        butOFF.setVisibility(View.INVISIBLE);
+        mYourService = new BackgroundService();
+        mServiceIntent = new Intent(this, mYourService.getClass());
+        if (!isMyServiceRunning(mYourService.getClass())) {
+            butOFF.setVisibility(View.INVISIBLE);
+        } else {
+            butON.setVisibility(View.INVISIBLE);
+        }
 
         savedDevices = new ArrayList<>();
 
@@ -278,8 +284,8 @@ public class MainActivity extends AppCompatActivity {
         if (permissions && savedDevices.size() > 0) {
             butON.setVisibility(View.INVISIBLE);
             butOFF.setVisibility(View.VISIBLE);
-            mYourService = new BackgroundService();
-            mServiceIntent = new Intent(this, mYourService.getClass());
+            //mYourService = new BackgroundService();
+            //mServiceIntent = new Intent(this, mYourService.getClass());
             if (!isMyServiceRunning(mYourService.getClass())) {
                 startService(mServiceIntent);
             }
@@ -311,6 +317,17 @@ public class MainActivity extends AppCompatActivity {
             channel.setDescription(description);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+
+    @Override
+    public void onDestroy(){
+        if (butOFF.getVisibility() == View.VISIBLE){
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction("restartservice");
+            broadcastIntent.setClass(this, Restarter.class);
+            this.sendBroadcast(broadcastIntent);
+        }
+        super.onDestroy();
     }
 
 
