@@ -57,9 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private final int maxSavedItems = 5;
     private NotificationManager notificationManager;
 
-    Intent mServiceIntent;
-    private BackgroundService mYourService;
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,15 +84,11 @@ public class MainActivity extends AppCompatActivity {
         butOFF.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 stopDetection();
+                stopDetection();
+                stopDetection();
             }
         });
         butOFF.setVisibility(View.INVISIBLE);
-
-        mYourService = new BackgroundService();
-        mServiceIntent = new Intent(this, mYourService.getClass());
-        if (isMyServiceRunning(mYourService.getClass())) {
-            stopDetection();
-        }
 
         savedDevices = new ArrayList<>();
 
@@ -111,6 +104,16 @@ public class MainActivity extends AppCompatActivity {
 
         updateListView();
 
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     class CustomAdapter extends BaseAdapter {
@@ -285,6 +288,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDetection(){
+        butON.setVisibility(View.INVISIBLE);
+        butOFF.setVisibility(View.VISIBLE);
+        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = BGSettings.edit();
+        editor.putBoolean("Run", true);
+        editor.apply();
+        startService(new Intent(this, BackgroundService.class));
+    }
+    public void stopDetection(){
+        butON.setVisibility(View.VISIBLE);
+        butOFF.setVisibility(View.INVISIBLE);
+        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = BGSettings.edit();
+        editor.putBoolean("Run", false);
+        editor.apply();
+        stopService(new Intent(this, BackgroundService.class));
+    }
+
+    /**
+
+    public void startDetection(){
         if (permissions && savedDevices.size() > 0) {
             butON.setVisibility(View.INVISIBLE);
             butOFF.setVisibility(View.VISIBLE);
@@ -309,16 +333,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("Run", false);
         editor.apply();
     }
-
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
+     */
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

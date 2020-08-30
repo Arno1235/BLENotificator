@@ -13,12 +13,15 @@ public class Restarter extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SharedPreferences BGSettings = context.getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
         if (BGSettings.getBoolean("Run", true)) {
-            Log.i("Broadcast Listened", "Service tried to stop");
+            Log.i("BG", "Restarter");
+            context.startService(new Intent(context, BackgroundService.class));
+            /**
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(new Intent(context, BackgroundService.class));
             } else {
                 context.startService(new Intent(context, BackgroundService.class));
             }
+            */
         }
     }
 }
