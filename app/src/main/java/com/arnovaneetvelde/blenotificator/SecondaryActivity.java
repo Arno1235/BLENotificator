@@ -248,15 +248,13 @@ public class SecondaryActivity extends AppCompatActivity {
         startActivity(new Intent(this, MainActivity.class));
     }
 
-    // Device scan callback.
     private ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             boolean exists = false;
             for (BLEDevice device : devices){
                 if (device.isEqual(result.getDevice().getAddress())){
-                    device.setRssi(result.getRssi());
-                    exists = true;
+                    device.setRange(true);
                     break;
                 }
             }

@@ -296,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         startService(new Intent(this, BackgroundService.class));
     }
+
     public void stopDetection(){
         butON.setVisibility(View.VISIBLE);
         butOFF.setVisibility(View.INVISIBLE);
@@ -305,35 +306,6 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         stopService(new Intent(this, BackgroundService.class));
     }
-
-    /**
-
-    public void startDetection(){
-        if (permissions && savedDevices.size() > 0) {
-            butON.setVisibility(View.INVISIBLE);
-            butOFF.setVisibility(View.VISIBLE);
-            //mYourService = new BackgroundService();
-            //mServiceIntent = new Intent(this, mYourService.getClass());
-            SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = BGSettings.edit();
-            editor.putBoolean("Run", true);
-            editor.apply();
-            if (!isMyServiceRunning(mYourService.getClass())) {
-                startService(mServiceIntent);
-            }
-        }
-    }
-
-    public void stopDetection(){
-        butON.setVisibility(View.VISIBLE);
-        butOFF.setVisibility(View.INVISIBLE);
-        //stopService(mServiceIntent);
-        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = BGSettings.edit();
-        editor.putBoolean("Run", false);
-        editor.apply();
-    }
-     */
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
