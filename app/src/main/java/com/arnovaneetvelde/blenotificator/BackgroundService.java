@@ -37,13 +37,17 @@ public class BackgroundService extends Service {
     private final int NOTIFICATION_ID = 121, maxSavedItems = 5;
     private NotificationManager notificationManager;
     private ArrayList<BLEDevice> savedDevices;
+
     private BluetoothManager btManager;
     private BluetoothAdapter btAdapter;
     private BluetoothLeScanner btScanner;
 
+    private ScanCallback leScanCallback;
+
     @Override
     public void onCreate() {
         notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
         Log.i(TAG, "onCreate");
     }
 
@@ -53,12 +57,16 @@ public class BackgroundService extends Service {
         if(!BGSettings.getBoolean("Run", true)) {
             handler.removeCallbacks(runnable);
             Log.i(TAG, "Run = false");
-        } else {
+        }
+        /**
+        else {
+            handler.removeCallbacks(runnable);
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction("restartservice");
-            broadcastIntent.setClass(this, Restarter.class);
-            this.sendBroadcast(broadcastIntent);
+            broadcastIntent.setClass(context, Restarter.class);
+            context.sendBroadcast(broadcastIntent);
         }
+         */
         notificationManager.cancel(NOTIFICATION_TAG ,NOTIFICATION_ID);
         Log.i(TAG, "onDestroy");
     }
@@ -76,7 +84,6 @@ public class BackgroundService extends Service {
         btAdapter = btManager.getAdapter();
         btScanner = btAdapter.getBluetoothLeScanner();
         savedDevices = new ArrayList<>();
-        createBGNotification();
         getSavedDevices();
 
         counter = 0;
@@ -99,12 +106,31 @@ public class BackgroundService extends Service {
     }
 
     public void autoRun(){
+        createBGNotification();
         stopScanning();
+
+        leScanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                Log.i(TAG, "Found " + result.getDevice().getAddress());
+                boolean allInRange = true;
+                for (BLEDevice device : savedDevices){
+                    if (device.isEqual(result.getDevice().getAddress())){
+                        device.setRange(true);
+                        Log.i(TAG, "found device");
+                    }
+                    if (!device.isInRange()) allInRange = false;
+                }
+                if (allInRange) stopScanning();
+            }
+        };
+
         if (hasBlePermissions() && areLocationServicesEnabled(this)) {
             for (BLEDevice device : savedDevices) {
                 if (!device.isInRange()) {
                     createNotification(device.getName());
                 } else {
+                    notificationManager.cancel(device.getName(),1);
                     device.setRange(false);
                 }
             }
@@ -126,6 +152,7 @@ public class BackgroundService extends Service {
     }
 
     public void startScanning(){
+        Log.i(TAG, "startScanning");
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -135,6 +162,7 @@ public class BackgroundService extends Service {
     }
 
     public void stopScanning(){
+        Log.i(TAG, "stopScanning");
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -142,21 +170,6 @@ public class BackgroundService extends Service {
             }
         });
     }
-
-    private ScanCallback leScanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            boolean allInRange = true;
-            for (BLEDevice device : savedDevices){
-                if (device.isEqual(result.getDevice().getAddress())){
-                    device.setRange(true);
-                    Log.i(TAG, "found device");
-                }
-                if (!device.isInRange()) allInRange = false;
-            }
-            if (allInRange) stopScanning();
-        }
-    };
 
     public boolean hasBlePermissions() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
@@ -206,7 +219,7 @@ public class BackgroundService extends Service {
                 .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
                 .setChannelId("BLENotificator");
 
-        notificationManager.notify(1, b.build());
+        notificationManager.notify(text, 1, b.build());
     }
 
     public void createBGNotification(){
