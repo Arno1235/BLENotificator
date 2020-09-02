@@ -40,6 +40,8 @@ public class BackgroundService extends Service {
     private NotificationManager notificationManager;
     private ArrayList<BLEDevice> savedDevices;
 
+    private NotificationCompat.Builder b;
+
     private BluetoothManager btManager;
     private BluetoothAdapter btAdapter;
     private BluetoothLeScanner btScanner;
@@ -54,7 +56,7 @@ public class BackgroundService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            NotificationCompat.Builder b = new NotificationCompat.Builder(context);
+            b = new NotificationCompat.Builder(context);
 
             b.setAutoCancel(true)
                     .setOngoing(true)
@@ -111,7 +113,7 @@ public class BackgroundService extends Service {
         btAdapter = btManager.getAdapter();
         btScanner = btAdapter.getBluetoothLeScanner();
 
-        mgr = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+        mgr = (PowerManager)context.getSystemService(context.POWER_SERVICE);
         wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakeLock");
 
         leScanCallback = new ScanCallback() {
