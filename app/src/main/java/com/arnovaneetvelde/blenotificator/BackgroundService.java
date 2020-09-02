@@ -10,7 +10,9 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,12 +24,15 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class BackgroundService extends Service {
 
@@ -191,7 +196,11 @@ public class BackgroundService extends Service {
             @Override
             public void run() {
                 //btAdapter.startLeScan(leScanCallback2);
-                btScanner.startScan(leScanCallback);
+                ScanFilter filter = new ScanFilter.Builder().setDeviceAddress("C9:A1:8F:C8:A3:09").build();
+                ScanSettings settings = new ScanSettings.Builder()
+                        .setScanMode( ScanSettings.SCAN_MODE_LOW_LATENCY )
+                        .build();
+                btScanner.startScan(Collections.singletonList(filter), settings, leScanCallback);
             }
         });
     }
