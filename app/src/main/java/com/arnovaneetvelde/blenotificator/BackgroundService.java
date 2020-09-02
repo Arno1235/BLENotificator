@@ -190,6 +190,7 @@ public class BackgroundService extends Service {
     }
 
     public void startScanning(){
+        
         wakeLock.acquire();
         Log.i(TAG, "startScanning");
         AsyncTask.execute(new Runnable() {
