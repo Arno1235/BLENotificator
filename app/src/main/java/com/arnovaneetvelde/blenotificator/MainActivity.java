@@ -1,30 +1,20 @@
 package com.arnovaneetvelde.blenotificator;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -32,32 +22,33 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
     private BluetoothManager btManager;
     private BluetoothAdapter btAdapter;
-    private BluetoothLeScanner btScanner;
+
     private final static int REQUEST_ENABLE_BT = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
-    private Button butON, butOFF;
-    private ListView listSavedDevices;
-    private boolean permissions;
-    private ArrayList<BLEDevice> savedDevices;
     private final int maxSavedItems = 5;
+
+    private Button butON, butOFF;
+    private TextView textInterval;
+    private ListView listSavedDevices;
+    private ArrayList<BLEDevice> savedDevices;
+
+    private boolean permissions;
     private NotificationManager notificationManager;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -68,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
 
         btManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         btAdapter = btManager.getAdapter();
-        btScanner = btAdapter.getBluetoothLeScanner();
 
         permissions = false;
         btPermissions();
@@ -87,14 +77,43 @@ public class MainActivity extends AppCompatActivity {
         butOFF.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 stopDetection();
-                stopDetection();
-                stopDetection();
             }
         });
-        butOFF.setVisibility(View.INVISIBLE);
+
+        if (isMyServiceRunning(BackgroundService.class)) {
+            butON.setVisibility(View.INVISIBLE);
+        } else {
+            butOFF.setVisibility(View.INVISIBLE);
+        }
+
+        textInterval = (TextView) findViewById(R.id.textInterval);
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                int interval = i + 10000;
+                interval = Math.round(interval/1000);
+                if (interval < 60){
+                    textInterval.setText(interval + " seconds");
+                } else if (interval%60 == 0) {
+                    textInterval.setText(Integer.toString(interval/60) + " minutes");
+                } else {
+                    textInterval.setText(Integer.toString(interval/60) + " minutes and " + Integer.toString(interval%60) + " seconds");
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         savedDevices = new ArrayList<>();
-
         listSavedDevices = (ListView) findViewById(R.id.listSavedDevices);
 
         notificationManager = getSystemService(NotificationManager.class);
@@ -222,7 +241,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
             }
 
-            // Make sure we have access coarse location enabled, if not, prompt the user to enable it
             if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("This app needs location access");
@@ -237,7 +255,6 @@ public class MainActivity extends AppCompatActivity {
                 builder.show();
             }
 
-            // Make sure we have access fine location enabled, if not, prompt the user to enable it
             if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("This app needs location access");
@@ -303,26 +320,6 @@ public class MainActivity extends AppCompatActivity {
             startService(new Intent(this, BackgroundService.class));
         }
     }
-    public void stopDetection(){
-        butON.setVisibility(View.VISIBLE);
-        butOFF.setVisibility(View.INVISIBLE);
-        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = BGSettings.edit();
-        editor.putBoolean("Run", false);
-        editor.apply();
-        stopService(new Intent(this, BackgroundService.class));
-    }
-
-    /**
-    public void startDetection(){
-        butON.setVisibility(View.INVISIBLE);
-        butOFF.setVisibility(View.VISIBLE);
-        SharedPreferences BGSettings = getApplicationContext().getSharedPreferences("BackgroundService", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = BGSettings.edit();
-        editor.putBoolean("Run", true);
-        editor.apply();
-        startService(new Intent(this, BackgroundService.class));
-    }
 
     public void stopDetection(){
         butON.setVisibility(View.VISIBLE);
@@ -333,7 +330,6 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         stopService(new Intent(this, BackgroundService.class));
     }
-     */
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -368,55 +364,4 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-
-
-
-
-
-
-    //---------------------------------------------------------------------------------------------------------------------------------------------
-
-
-/**
-
-    public void testBackground(View v){
-        Runnable newThread = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    testNotification();
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e){
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        newThread.run();
-    }
-
-    public void testNotification(){
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder b = new NotificationCompat.Builder(getApplicationContext());
-
-        b.setAutoCancel(true)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setTicker("Hearty365")
-                .setContentTitle("Default notification")
-                .setContentText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-                .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
-                .setContentIntent(contentIntent)
-                .setChannelId("BLENotificator")
-                .setContentInfo("Info");
-
-
-        NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, b.build());
-    }
-    */
 }
