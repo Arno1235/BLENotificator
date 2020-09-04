@@ -1,9 +1,9 @@
 BLE Notificator
 
-This app allows you to get a notification when a specific bluetooth low energy device is out of range.
+Get a notification when a specific Bluetooth low energy device is out of range.
 
-In this app you can choose any bluetooth low energy device (up to 5 devices simultaniously) for detecting if the devices gets out of range. You can choose the interval with which the app scans for devices (important for battery consumption).
-This app is usefull for people who have ble devices on their keychain (or wallet for example) and want to get a notification when they forget them.
+In this app, you can choose any Bluetooth low energy device (up to 5 devices simultaneously) for detecting if the device gets out of range. You can choose the interval with which the app scans for devices (important for battery consumption).
+This app is useful for people who have ble devices on their keychain (or wallet for example) and want to get a notification when they forget them.
 
-This app was created for myself but I placed it online because other people might find it usefull. This means this app may have bugs or little problems.
+This app was created for me but I placed it online because other people might find it useful. This means this app may have bugs or little problems.
 If you find any bugs or problems please let me know, I will try to solve them as quickly as possible.
