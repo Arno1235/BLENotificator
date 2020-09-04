@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences settings = getApplicationContext().getSharedPreferences("Interval", Context.MODE_PRIVATE);
         if (settings.contains("IntervalTime")){
             seekBar.setProgress(settings.getInt("IntervalTime", 0)*1000 - 10000);
-            setTimeText(settings.getInt("IntervalTime", 0)*1000 - 10000);
+            setTimeText(settings.getInt("IntervalTime", 0));
         } else {
             SharedPreferences.Editor editor = settings.edit();
             editor.putInt("IntervalTime", 60);
