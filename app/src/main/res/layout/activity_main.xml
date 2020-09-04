@@ -45,7 +45,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:max="590000"
-        android:progress="60000"
+        android:progress="50000"
         app:layout_constraintBottom_toTopOf="@+id/butON"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

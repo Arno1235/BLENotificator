@@ -6,7 +6,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -88,18 +87,26 @@ public class MainActivity extends AppCompatActivity {
 
         textInterval = (TextView) findViewById(R.id.textInterval);
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("Interval", Context.MODE_PRIVATE);
+        if (settings.contains("IntervalTime")){
+            seekBar.setProgress(settings.getInt("IntervalTime", 0)*1000 - 10000);
+            setTimeText(settings.getInt("IntervalTime", 0)*1000 - 10000);
+        } else {
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putInt("IntervalTime", 60);
+            editor.apply();
+            setTimeText(60);
+        }
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("Interval", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = settings.edit();
                 int interval = i + 10000;
                 interval = Math.round(interval/1000);
-                if (interval < 60){
-                    textInterval.setText(interval + " seconds");
-                } else if (interval%60 == 0) {
-                    textInterval.setText(Integer.toString(interval/60) + " minutes");
-                } else {
-                    textInterval.setText(Integer.toString(interval/60) + " minutes and " + Integer.toString(interval%60) + " seconds");
-                }
+                editor.putInt("IntervalTime", interval);
+                editor.apply();
+                setTimeText(interval);
             }
 
             @Override
@@ -126,6 +133,16 @@ public class MainActivity extends AppCompatActivity {
 
         updateListView();
 
+    }
+
+    public void setTimeText(int interval){
+        if (interval < 60){
+            textInterval.setText(interval + " seconds");
+        } else if (interval%60 == 0) {
+            textInterval.setText(Integer.toString(interval/60) + " minutes");
+        } else {
+            textInterval.setText(Integer.toString(interval/60) + " minutes and " + Integer.toString(interval%60) + " seconds");
+        }
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {

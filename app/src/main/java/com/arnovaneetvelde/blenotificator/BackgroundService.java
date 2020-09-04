@@ -36,13 +36,13 @@ public class BackgroundService extends Service {
 
     private final String TAG = "BG", NOTIFICATION_TAG = "BGNotification";
     private final int NOTIFICATION_ID = 121, maxSavedItems = 5;
+    private int intervalTime;
 
     private ArrayList<BLEDevice> savedDevices;
     private List<ScanFilter> filters;
     private ScanSettings settings;
 
     private NotificationManager notificationManager;
-    private NotificationCompat.Builder b;
 
     private BluetoothManager btManager;
     private BluetoothAdapter btAdapter;
@@ -55,13 +55,13 @@ public class BackgroundService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            b = new NotificationCompat.Builder(context);
+            NotificationCompat.Builder b = new NotificationCompat.Builder(context);
 
             b.setAutoCancel(true)
                     .setOngoing(true)
                     .setDefaults(Notification.DEFAULT_ALL)
                     .setWhen(System.currentTimeMillis())
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(R.drawable.icon)
                     .setContentTitle("App is running in the background")
                     .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
                     .setChannelId("BLENotificatorBackgroundService");
@@ -113,19 +113,35 @@ public class BackgroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         getSavedDevices();
-
-        if (handler != null) {
-            handler.removeCallbacks(runnable);
-        }
-
-        handler = new Handler();
-        runnable = new Runnable() {
-            public void run() {
-                    autoRun();
-                    handler.postDelayed(runnable, 15000);
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("Interval", Context.MODE_PRIVATE);
+        if (settings.contains("IntervalTime")){
+            intervalTime = settings.getInt("IntervalTime", 0) * 1000;
+            if (handler != null) {
+                handler.removeCallbacks(runnable);
             }
-        };
-        handler.postDelayed(runnable, 2000);
+
+            handler = new Handler();
+            runnable = new Runnable() {
+                public void run() {
+                    autoRun();
+                    handler.postDelayed(runnable, intervalTime);
+                }
+            };
+            handler.postDelayed(runnable, 2000);
+        } else {
+            NotificationCompat.Builder b = new NotificationCompat.Builder(context);
+
+            b.setAutoCancel(true)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.drawable.icon)
+                    .setContentTitle("Error")
+                    .setContentText("There is something wrong")
+                    .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
+                    .setChannelId("BLENotificator");
+
+            notificationManager.notify(2, b.build());
+        }
 
         return START_STICKY;
 
@@ -151,7 +167,7 @@ public class BackgroundService extends Service {
             b.setAutoCancel(true)
                     .setDefaults(Notification.DEFAULT_ALL)
                     .setWhen(System.currentTimeMillis())
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(R.drawable.icon)
                     .setContentTitle("No permission")
                     .setContentText("Please enable the required permissions.")
                     .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
@@ -224,7 +240,7 @@ public class BackgroundService extends Service {
         b.setAutoCancel(false)
                 .setDefaults(Notification.DEFAULT_ALL)
                 .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.icon)
                 .setContentTitle(text + " is out of range.")
                 .setContentText("Don't forget your " + text)
                 .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
